@@ -1,4 +1,5 @@
 import scraper
+from database import DB_FILENAME, TABLE_COLUMNS, TABLE_NAME, DatabaseManager
 
 
 def main():
@@ -68,14 +69,27 @@ def main():
                     )
 
                     for category_option in category_options:
-                        championship_info = [
-                            championship_option,
-                            year_option,
-                            city_option,
-                            event_option,
-                            category_option,
-                        ]
-                        print(championship_info)
+                        championship_values = (
+                            championship_option["value"],
+                            year_option["value"],
+                            city_option["value"],
+                            event_option["value"],
+                            category_option["value"],
+                        )
+                        championship_id = " ".join(championship_values)
+
+                        championship_record = {
+                            "championship": championship_option["text"],
+                            "year": year_option["text"],
+                            "city": city_option["text"],
+                            "event": event_option["text"],
+                            "category": category_option["text"],
+                            "id": championship_id,
+                        }
+
+                        db = DatabaseManager(DB_FILENAME)
+                        db.create_table(table_name=TABLE_NAME, columns=TABLE_COLUMNS)
+                        db.add(table_name=TABLE_NAME, data=championship_record)
 
 
 if __name__ == "__main__":
