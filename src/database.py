@@ -1,6 +1,6 @@
 import sqlite3
 
-DB_FILENAME = "test.db"
+DB_FILENAME = "test2.db"
 TABLE_NAME = "competitions"
 TABLE_COLUMNS = {
     "championship": "TEXT NOT NULL",
