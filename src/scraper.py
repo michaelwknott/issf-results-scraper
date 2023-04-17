@@ -4,6 +4,7 @@ ISSF results url:
 https://www.issf-sports.org/competitions/results.ashx
 """
 
+import time
 
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
@@ -76,6 +77,7 @@ class ISSFScraper:
         self.page.locator(YEAR_DROPDOWN_CSS_SELECTOR).select_option(year)
 
         self.page.locator(CITY_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX).is_enabled()
+        time.sleep(1)
         city_html = self.page.inner_html(CITY_DROPDOWN_CSS_SELECTOR)
         self.cities = self._parse_html_option_tags(city_html)
 
@@ -122,4 +124,5 @@ class ISSFScraper:
 if __name__ == "__main__":
     s = ISSFScraper(URL)
     s.get_championship_options_html()
+    print(s.championships)
     print(s.championships)

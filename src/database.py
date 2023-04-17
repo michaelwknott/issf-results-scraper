@@ -51,7 +51,7 @@ class DatabaseManager:
         column_values = tuple(data.values())
         self._execute(
             f"""
-            INSERT INTO {table_name}
+            INSERT OR IGNORE INTO {table_name}
             ({column_names})
             VALUES ({placeholders});
             """,
@@ -64,7 +64,7 @@ class DatabaseManager:
         column_values = tuple(data.values())
         self._execute_many(
             f"""
-            INSERT INTO {table_name}
+            INSERT OR IGNORE INTO {table_name}
             ({column_names})
             VALUES ({placeholders});
             """,

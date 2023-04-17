@@ -5,6 +5,7 @@ from database import DB_FILENAME, TABLE_COLUMNS, TABLE_NAME, DatabaseManager
 def main():
     scraper = s.ISSFScraper(s.URL)
     db = DatabaseManager(DB_FILENAME)
+    db.create_table(table_name=TABLE_NAME, columns=TABLE_COLUMNS)
 
     scraper.get_championship_options_html()
     print("Starting scraper...")
@@ -18,6 +19,9 @@ def main():
             )
 
             for city_option in scraper.cities:
+                print("*" * 50)
+                print(scraper.cities)
+                print("*" * 50)
                 scraper.get_event_options_html(
                     championship_option["value"],
                     year_option["value"],
@@ -50,7 +54,7 @@ def main():
                             "category": category_option["text"],
                             "id": championship_id,
                         }
-                        db.create_table(table_name=TABLE_NAME, columns=TABLE_COLUMNS)
+
                         db.add(table_name=TABLE_NAME, data=championship_record)
 
                         print(f"{championship_record} added to database.")
