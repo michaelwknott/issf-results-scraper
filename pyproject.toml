@@ -4,4 +4,4 @@ version = "0.1.0"
 dependencies = ["beautifulsoup4", "playwright", "requests"]
 
 [project.optional-dependencies]
-dev = ["pre-commit", "black", "ruff", "mypy", "types-PyYAML"]
+dev = ["pre-commit", "black", "ruff", "mypy", "types-PyYAML", "types-beautifulsoup4"]

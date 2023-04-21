@@ -50,18 +50,18 @@ class ISSFScraper:
         self.page = self.browser.new_page()
         self.page.goto(self.url)
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.page.close()
         self.browser.close()
 
-    def get_championship_options_html(self):
+    def get_championship_options_html(self) -> None:
         self.page.locator(
             CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX
         ).is_enabled()
         championship_html = self.page.inner_html(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR)
         self.championships = self._parse_html_option_tags(championship_html)
 
-    def get_year_options_html(self, championship_value: str):
+    def get_year_options_html(self, championship_value: str) -> None:
         self.page.reload(wait_until="domcontentloaded")
         self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
             championship_value
@@ -70,7 +70,7 @@ class ISSFScraper:
         year_html = self.page.inner_html(YEAR_DROPDOWN_CSS_SELECTOR)
         self.years = self._parse_html_option_tags(year_html)
 
-    def get_city_options_html(self, championship: str, year: str):
+    def get_city_options_html(self, championship: str, year: str) -> None:
         # Using page.reload() as a workaround to ensure that CITY_DROPDOWN_CSS_SELECTOR
         # selects the updated city. Previously, the CITY_DROPDOWN_CSS_SELECTOR would
         # select the city from the previous championship selection.
@@ -85,7 +85,7 @@ class ISSFScraper:
         city_html = self.page.inner_html(CITY_DROPDOWN_CSS_SELECTOR)
         self.cities = self._parse_html_option_tags(city_html)
 
-    def get_event_options_html(self, championship: str, year: str, city: str):
+    def get_event_options_html(self, championship: str, year: str, city: str) -> None:
         self.page.reload(wait_until="domcontentloaded")
         self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
             championship
@@ -99,7 +99,7 @@ class ISSFScraper:
 
     def get_category_options_html(
         self, championship: str, year: str, city: str, event: str
-    ):
+    ) -> None:
         self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
             championship
         )

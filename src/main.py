@@ -7,7 +7,7 @@ import scraper as s
 from database import DB_FILENAME, TABLE_COLUMNS, TABLE_NAME, DatabaseManager
 
 
-def main():
+def main() -> None:
     # Logging
     with open("logging_config.yaml", "r") as f:
         config = yaml.safe_load(f.read())
