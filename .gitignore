@@ -130,3 +130,6 @@ dmypy.json
 
 # SQLite Database
 *.db
+
+# Logs
+*.log

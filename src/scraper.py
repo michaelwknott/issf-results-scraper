@@ -4,7 +4,6 @@ ISSF results url:
 https://www.issf-sports.org/competitions/results.ashx
 """
 
-import time
 
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
@@ -63,6 +62,7 @@ class ISSFScraper:
         self.championships = self._parse_html_option_tags(championship_html)
 
     def get_year_options_html(self, championship_value: str):
+        self.page.reload(wait_until="domcontentloaded")
         self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
             championship_value
         )
@@ -71,17 +71,22 @@ class ISSFScraper:
         self.years = self._parse_html_option_tags(year_html)
 
     def get_city_options_html(self, championship: str, year: str):
+        # Using page.reload() as a workaround to ensure that CITY_DROPDOWN_CSS_SELECTOR
+        # selects the updated city. Previously, the CITY_DROPDOWN_CSS_SELECTOR would
+        # select the city from the previous championship selection.
+        self.page.reload(wait_until="domcontentloaded")
         self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
             championship
         )
         self.page.locator(YEAR_DROPDOWN_CSS_SELECTOR).select_option(year)
 
         self.page.locator(CITY_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX).is_enabled()
-        time.sleep(1)
+
         city_html = self.page.inner_html(CITY_DROPDOWN_CSS_SELECTOR)
         self.cities = self._parse_html_option_tags(city_html)
 
     def get_event_options_html(self, championship: str, year: str, city: str):
+        self.page.reload(wait_until="domcontentloaded")
         self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
             championship
         )
@@ -124,5 +129,6 @@ class ISSFScraper:
 if __name__ == "__main__":
     s = ISSFScraper(URL)
     s.get_championship_options_html()
+    print(s.championships)
     print(s.championships)
     print(s.championships)
