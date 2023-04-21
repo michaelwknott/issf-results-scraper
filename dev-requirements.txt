@@ -56,6 +56,10 @@ ruff==0.0.259
     # via issf-results-scraper (pyproject.toml)
 soupsieve==2.4.1
     # via beautifulsoup4
+types-beautifulsoup4==4.12.0.3
+    # via issf-results-scraper (pyproject.toml)
+types-html5lib==1.1.11.13
+    # via types-beautifulsoup4
 types-pyyaml==6.0.12.9
     # via issf-results-scraper (pyproject.toml)
 typing-extensions==4.5.0

@@ -1,8 +1,8 @@
 import sqlite3
 
-DB_FILENAME = "issf.db"
-TABLE_NAME = "competitions"
-TABLE_COLUMNS = {
+DB_FILENAME: str = "issf.db"
+TABLE_NAME: str = "competitions"
+TABLE_COLUMNS: dict[str, str] = {
     "championship": "TEXT NOT NULL",
     "year": "TEXT NOT NULL",
     "city": "TEXT NOT NULL",
@@ -13,26 +13,30 @@ TABLE_COLUMNS = {
 
 
 class DatabaseManager:
-    def __init__(self, database_filename):
+    def __init__(self, database_filename: str) -> None:
         self.database_filename = database_filename
         self.connection = sqlite3.connect(self.database_filename)
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.connection.close()
 
-    def _execute(self, sql_statement, values=None):
+    def _execute(
+        self, sql_statement: str, values: tuple[str, ...] | None = None
+    ) -> sqlite3.Cursor:
         with self.connection:
             cursor = self.connection.cursor()
             cursor.execute(sql_statement, values or [])
             return cursor
 
-    def _execute_many(self, sql_statement, values=None):
+    def _execute_many(
+        self, sql_statement: str, values: tuple[str, ...] | None = None
+    ) -> sqlite3.Cursor:
         with self.connection:
             cursor = self.connection.cursor()
             cursor.executemany(sql_statement, values or [])
             return cursor
 
-    def create_table(self, table_name, columns):
+    def create_table(self, table_name: str, columns: dict[str, str]) -> None:
         columns_with_types = [
             f"{column_name} {column_type}"
             for column_name, column_type in columns.items()
@@ -45,7 +49,7 @@ class DatabaseManager:
             """
         )
 
-    def add(self, table_name, data):
+    def add(self, table_name: str, data: dict[str, str]) -> None:
         placeholders = ", ".join("?" * len(data))
         column_names = ", ".join(data.keys())
         column_values = tuple(data.values())
@@ -58,7 +62,7 @@ class DatabaseManager:
             column_values,
         )
 
-    def add_many(self, table_name, data):
+    def add_many(self, table_name: str, data: dict[str, str]) -> None:
         placeholders = ", ".join("?" * len(data))
         column_names = ", ".join(data.keys())
         column_values = tuple(data.values())
