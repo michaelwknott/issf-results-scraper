@@ -1,4 +1,4 @@
-"""A script to scrape results data from the ISSF website.
+"""Scrape and parse results data from the ISSF website.
 
 ISSF results url:
 https://www.issf-sports.org/competitions/results.ashx
@@ -33,6 +33,11 @@ CATEGORY_DROPDOWN_CSS_SELECTOR = (
 # css selector suffix required to check if html element is enabled following selection
 # concatenated with *_*_CSS_SELECTOR above
 SELECTOR_SUFFIX = " > option:nth-child(2)"
+
+
+# Using page.reload() as a workaround to ensure dropdown lists have updated.
+# For example, prior to adding page.reload() CITY_DROPDOWN_CSS_SELECTOR would
+# select the city from the previous year selection.
 
 
 class ISSFScraper:
@@ -71,9 +76,6 @@ class ISSFScraper:
         self.years = self._parse_html_option_tags(year_html)
 
     def get_city_options_html(self, championship: str, year: str) -> None:
-        # Using page.reload() as a workaround to ensure that CITY_DROPDOWN_CSS_SELECTOR
-        # selects the updated city. Previously, the CITY_DROPDOWN_CSS_SELECTOR would
-        # select the city from the previous championship selection.
         self.page.reload(wait_until="domcontentloaded")
         self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
             championship
