@@ -35,114 +35,100 @@ CATEGORY_DROPDOWN_CSS_SELECTOR = (
 SELECTOR_SUFFIX = " > option:nth-child(2)"
 
 
-def get_championship_options_html():
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
+class ISSFScraper:
+    """ISSF results scraper."""
 
-        page.goto(URL)
-        html_championship_option_tags = page.inner_html(
-            CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR
-        )
+    def __init__(self, url: str) -> None:
+        self.url = url
+        self.championships: list[dict[str, str]] = []
+        self.years: list[dict[str, str]] = []
+        self.cities: list[dict[str, str]] = []
+        self.events: list[dict[str, str]] = []
+        self.categories: list[dict[str, str]] = []
+        self.playwright = sync_playwright().start()
+        self.browser = self.playwright.chromium.launch()
+        self.page = self.browser.new_page()
+        self.page.goto(self.url)
 
-        browser.close()
+    def __del__(self):
+        self.page.close()
+        self.browser.close()
 
-    return html_championship_option_tags
+    def get_championship_options_html(self):
+        self.page.locator(
+            CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX
+        ).is_enabled()
+        championship_html = self.page.inner_html(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR)
+        self.championships = self._parse_html_option_tags(championship_html)
 
-
-def get_year_options_html(championship_value):
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
-
-        page.goto(URL)
-        page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
+    def get_year_options_html(self, championship_value: str):
+        self.page.reload(wait_until="domcontentloaded")
+        self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
             championship_value
         )
+        self.page.locator(YEAR_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX).is_enabled()
+        year_html = self.page.inner_html(YEAR_DROPDOWN_CSS_SELECTOR)
+        self.years = self._parse_html_option_tags(year_html)
 
-        page.locator(YEAR_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX).is_enabled()
-        html_year_option_tags = page.inner_html(YEAR_DROPDOWN_CSS_SELECTOR)
+    def get_city_options_html(self, championship: str, year: str):
+        # Using page.reload() as a workaround to ensure that CITY_DROPDOWN_CSS_SELECTOR
+        # selects the updated city. Previously, the CITY_DROPDOWN_CSS_SELECTOR would
+        # select the city from the previous championship selection.
+        self.page.reload(wait_until="domcontentloaded")
+        self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
+            championship
+        )
+        self.page.locator(YEAR_DROPDOWN_CSS_SELECTOR).select_option(year)
 
-        browser.close()
+        self.page.locator(CITY_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX).is_enabled()
 
-    return html_year_option_tags
+        city_html = self.page.inner_html(CITY_DROPDOWN_CSS_SELECTOR)
+        self.cities = self._parse_html_option_tags(city_html)
 
+    def get_event_options_html(self, championship: str, year: str, city: str):
+        self.page.reload(wait_until="domcontentloaded")
+        self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
+            championship
+        )
+        self.page.locator(YEAR_DROPDOWN_CSS_SELECTOR).select_option(year)
+        self.page.locator(CITY_DROPDOWN_CSS_SELECTOR).select_option(city)
 
-def get_city_options_html(championship, year):
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
+        self.page.locator(EVENT_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX).is_enabled()
+        event_html = self.page.inner_html(EVENT_DROPDOWN_CSS_SELECTOR)
+        self.events = self._parse_html_option_tags(event_html)
 
-        page.goto(URL)
+    def get_category_options_html(
+        self, championship: str, year: str, city: str, event: str
+    ):
+        self.page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(
+            championship
+        )
+        self.page.locator(YEAR_DROPDOWN_CSS_SELECTOR).select_option(year)
+        self.page.locator(CITY_DROPDOWN_CSS_SELECTOR).select_option(city)
+        self.page.locator(EVENT_DROPDOWN_CSS_SELECTOR).select_option(event)
+        self.page.locator(CATEGORY_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX).is_enabled()
+        category_html = self.page.inner_html(CATEGORY_DROPDOWN_CSS_SELECTOR)
+        self.categories = self._parse_html_option_tags(category_html)
 
-        page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(championship)
-        page.locator(YEAR_DROPDOWN_CSS_SELECTOR).select_option(year)
+    def _parse_html_option_tags(self, html_options_tags: str) -> list[dict[str, str]]:
+        soup = BeautifulSoup(html_options_tags, "html.parser")
+        options = soup.find_all("option")
 
-        page.locator(CITY_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX).is_enabled()
-        html_city_option_tags = page.inner_html(CITY_DROPDOWN_CSS_SELECTOR)
+        options_tags = []
 
-        browser.close()
+        for option in options[1:]:
+            option_data = {
+                "value": option["value"],
+                "text": option.text,
+            }
+            options_tags.append(option_data)
 
-        return html_city_option_tags
-
-
-def get_event_options_html(championship, year, city):
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
-
-        page.goto(URL)
-
-        page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(championship)
-        page.locator(YEAR_DROPDOWN_CSS_SELECTOR).select_option(year)
-        page.locator(CITY_DROPDOWN_CSS_SELECTOR).select_option(city)
-
-        page.locator(EVENT_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX).is_enabled()
-        html_event_option_tags = page.inner_html(EVENT_DROPDOWN_CSS_SELECTOR)
-
-        browser.close()
-
-        return html_event_option_tags
-
-
-def get_category_options_html(championship, year, city, event):
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
-
-        page.goto(URL)
-
-        page.locator(CHAMPIONSHIP_DROPDOWN_CSS_SELECTOR).select_option(championship)
-        page.locator(YEAR_DROPDOWN_CSS_SELECTOR).select_option(year)
-        page.locator(CITY_DROPDOWN_CSS_SELECTOR).select_option(city)
-        page.locator(EVENT_DROPDOWN_CSS_SELECTOR).select_option(event)
-
-        page.locator(CATEGORY_DROPDOWN_CSS_SELECTOR + SELECTOR_SUFFIX).is_enabled()
-        html_category_option_tags = page.inner_html(CATEGORY_DROPDOWN_CSS_SELECTOR)
-
-        browser.close()
-
-        return html_category_option_tags
-
-
-def parse_html_option_tags(html_options_tags):
-    soup = BeautifulSoup(html_options_tags, "html.parser")
-    options = soup.find_all("option")
-
-    options_tags = []
-
-    for option in options[1:]:
-        option_data = {
-            "value": option["value"],
-            "text": option.text,
-        }
-        options_tags.append(option_data)
-
-    return options_tags
+        return options_tags
 
 
 if __name__ == "__main__":
-    dropdown_options_html = get_championship_options_html()
-    print(dropdown_options_html)
-    options_data = parse_html_option_tags(dropdown_options_html)
-    print(options_data)
+    s = ISSFScraper(URL)
+    s.get_championship_options_html()
+    print(s.championships)
+    print(s.championships)
+    print(s.championships)

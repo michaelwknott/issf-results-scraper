@@ -1,74 +1,84 @@
-import scraper
+import logging
+import logging.config
+
+import yaml
+
+import scraper as s
 from database import DB_FILENAME, TABLE_COLUMNS, TABLE_NAME, DatabaseManager
 
 
 def main():
-    html_championship_options = scraper.get_championship_options_html()
+    # Logging
+    with open("logging_config.yaml", "r") as f:
+        config = yaml.safe_load(f.read())
 
-    championship_options = scraper.parse_html_option_tags(html_championship_options)
+    logging.config.dictConfig(config)
+    logger = logging.getLogger("issf_scraper")
 
-    print(
-        f"The following championship dropdown options have been scraped:\n"
-        f"{championship_options}\n"
-    )
+    # Scraper
+    scraper = s.ISSFScraper(s.URL)
 
-    for championship_option in championship_options:
-        html_year_options = scraper.get_year_options_html(championship_option["value"])
+    # Database
+    db = DatabaseManager(DB_FILENAME)
+    db.create_table(table_name=TABLE_NAME, columns=TABLE_COLUMNS)
 
-        year_options = scraper.parse_html_option_tags(html_year_options)
-        print(
-            f"The following year dropdown options have been scraped:\n"
-            f"{year_options}\n"
-        )
+    print("Starting scraper...")
+    logger.info("Starting scraper.")
 
-        for year_option in year_options:
-            html_city_options = scraper.get_city_options_html(
+    scraper.get_championship_options_html()
+
+    for championship_option in scraper.championships:
+        logger.info(f"Current championship: {championship_option['text']}.")
+
+        scraper.get_year_options_html(championship_option["value"])
+
+        for year_option in scraper.years:
+            logger.info(
+                f"Current championship {championship_option['text']}, "
+                f"Current year: {year_option['text']}."
+            )
+
+            scraper.get_city_options_html(
                 championship_option["value"], year_option["value"]
             )
 
-            city_options = scraper.parse_html_option_tags(html_city_options)
-            print(
-                f"The following city dropdown options have been scraped:\n"
-                f"{city_options}\n"
-            )
+            for city_option in scraper.cities:
+                logger.info(
+                    f"Current championship {championship_option['text']}, "
+                    f"Current year: {year_option['text']}, "
+                    f"Current city: {city_option['text']}."
+                )
 
-            for city_option in city_options:
-                html_event_options = scraper.get_event_options_html(
+                scraper.get_event_options_html(
                     championship_option["value"],
                     year_option["value"],
                     city_option["value"],
                 )
 
-                event_options = scraper.parse_html_option_tags(html_event_options)
-                if event_options:
-                    print(
-                        f"The following event dropdown options have been scraped:\n"
-                        f"{event_options}\n"
-                    )
-                else:
-                    print(
-                        "The following event dropdown options have been scraped:\n"
-                        "No required events\n"
+                for event_option in scraper.events:
+                    logger.info(
+                        f"Current championship {championship_option['text']}, "
+                        f"Current year: {year_option['text']}, "
+                        f"Current city: {city_option['text']}, "
+                        f"Current event: {event_option['text']}."
                     )
 
-                for event_option in event_options:
-                    html_category_options = scraper.get_category_options_html(
+                    scraper.get_category_options_html(
                         championship_option["value"],
                         year_option["value"],
                         city_option["value"],
                         event_option["value"],
                     )
 
-                    category_options = scraper.parse_html_option_tags(
-                        html_category_options
-                    )
+                    for category_option in scraper.categories:
+                        logger.info(
+                            f"Current championship {championship_option['text']}, "
+                            f"Current year: {year_option['text']}, "
+                            f"Current city: {city_option['text']}, "
+                            f"Current event: {event_option['text']}, "
+                            f"Current category: {category_option['text']}."
+                        )
 
-                    print(
-                        f"The following category dropdown options have been scraped:\n"
-                        f"{category_options}\n"
-                    )
-
-                    for category_option in category_options:
                         championship_values = (
                             championship_option["value"],
                             year_option["value"],
@@ -87,9 +97,13 @@ def main():
                             "id": championship_id,
                         }
 
-                        db = DatabaseManager(DB_FILENAME)
-                        db.create_table(table_name=TABLE_NAME, columns=TABLE_COLUMNS)
+                        logger.info(f"Championship record: {championship_record}.")
+
                         db.add(table_name=TABLE_NAME, data=championship_record)
+
+                        logger.info(f"{championship_record} added to database.")
+
+                        print(f"{championship_record} added to database.")
 
 
 if __name__ == "__main__":
